@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Winderoo Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3248;
+      --accent: #6c8fff;
+      --accent-dim: #3d5499;
+      --green: #3ecf8e;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 24px 20px 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .connection-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      transition: all 0.3s;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+
+    .dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); }
+    .dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: var(--accent-dim); }
+
+    .card.wide { grid-column: 1 / -1; }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .card-value.sm { font-size: 24px; letter-spacing: -0.5px; }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .pill-on  { background: rgba(62,207,142,0.15); color: var(--green); }
+    .pill-off { background: rgba(248,113,113,0.15); color: var(--red); }
+    .pill-idle { background: rgba(148,163,184,0.12); color: var(--text-dim); }
+
+    .direction-display {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .dir-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-key { color: var(--text-dim); }
+    .stat-val { font-weight: 600; color: var(--text); }
+
+    .refresh-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    .refresh-progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      border-radius: 3px;
+      width: 100%;
+      transform-origin: left;
+      transition: transform linear;
+    }
+
+    .error-banner {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      font-size: 14px;
+      color: var(--red);
+      margin-bottom: 20px;
+      max-width: 960px;
+      margin-left: auto;
+      margin-right: auto;
+      display: none;
+    }
+
+    .error-banner.visible { display: block; }
+
+    .last-updated {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 24px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .card-value { font-size: 28px; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⌚</div>
+    <div>
+      <h1>Winder<span>oo</span></h1>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">winderoo.local</div>
+    </div>
+  </div>
+  <div class="connection-badge">
+    <div class="dot loading" id="dot"></div>
+    <span id="conn-label">Connecting…</span>
+  </div>
+</header>
+
+<div class="error-banner" id="error-banner"></div>
+
+<div class="grid" id="grid">
+
+  <!-- Winder power status -->
+  <div class="card">
+    <div class="card-label">Winder</div>
+    <div id="winder-status" class="card-value sm" style="margin-top:4px;">—</div>
+    <div class="card-sub" id="winder-sub">—</div>
+  </div>
+
+  <!-- Timer -->
+  <div class="card">
+    <div class="card-label">Timer</div>
+    <div id="timer-status" class="card-value sm" style="margin-top:4px;">—</div>
+    <div class="card-sub" id="timer-sub">—</div>
+  </div>
+
+  <!-- Turns per day -->
+  <div class="card">
+    <div class="card-label">Turns per Day</div>
+    <div class="card-value" id="tpd">—</div>
+    <div class="card-sub">rotations / day</div>
+  </div>
+
+  <!-- Direction -->
+  <div class="card">
+    <div class="card-label">Direction</div>
+    <div class="direction-display">
+      <div class="dir-icon" id="dir-icon">—</div>
+      <div>
+        <div class="card-value sm" id="direction">—</div>
+        <div class="card-sub" id="dir-sub"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule / Timer time -->
+  <div class="card">
+    <div class="card-label">Schedule Start</div>
+    <div class="card-value" id="schedule-time">—</div>
+    <div class="card-sub" id="schedule-sub">hh:mm (device local time)</div>
+  </div>
+
+  <!-- API version / misc -->
+  <div class="card">
+    <div class="card-label">Device Info</div>
+    <div class="stat-row"><span class="stat-key">API Version</span><span class="stat-val" id="api-version">—</span></div>
+    <div class="stat-row"><span class="stat-key">GMT Offset</span><span class="stat-val" id="gmt-offset">—</span></div>
+    <div class="stat-row"><span class="stat-key">Screen Sleep</span><span class="stat-val" id="screen-sleep">—</span></div>
+    <div class="stat-row"><span class="stat-key">Wind Duration</span><span class="stat-val" id="wind-duration">—</span></div>
+  </div>
+
+</div>
+
+<div class="refresh-bar" style="max-width:960px;margin:20px auto 0;">
+  <div class="refresh-progress" id="progress"></div>
+</div>
+<div class="last-updated" id="last-updated"></div>
+
+<footer>
+  <a href="http://winderoo.local" target="_blank" rel="noopener">Open Winderoo UI</a>
+  &nbsp;·&nbsp; Auto-refreshes every 10 s
+</footer>
+
+<script>
+  const BASE = 'http://winderoo.local';
+  const INTERVAL = 10000;
+
+  const $ = id => document.getElementById(id);
+
+  function pill(on, labelOn, labelOff) {
+    const cls = on ? 'pill-on' : 'pill-off';
+    const lbl = on ? labelOn : labelOff;
+    return `<span class="status-pill ${cls}">${lbl}</span>`;
+  }
+
+  function directionInfo(dir) {
+    const d = (dir || '').toLowerCase();
+    if (d.includes('clock') && !d.includes('counter')) return { icon: '↻', label: 'Clockwise', sub: 'CW only' };
+    if (d.includes('counter')) return { icon: '↺', label: 'Counter-CW', sub: 'CCW only' };
+    if (d.includes('both') || d.includes('alternating')) return { icon: '⇄', label: 'Alternating', sub: 'CW + CCW' };
+    return { icon: '—', label: dir || 'Unknown', sub: '' };
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function formatGmt(offset) {
+    if (offset == null || offset === '') return '—';
+    const h = Math.floor(Math.abs(offset) / 3600);
+    const m = Math.floor((Math.abs(offset) % 3600) / 60);
+    const sign = offset >= 0 ? '+' : '-';
+    return `UTC${sign}${pad(h)}:${pad(m)}`;
+  }
+
+  function setConn(state) {
+    const dot = $('dot');
+    const label = $('conn-label');
+    dot.className = 'dot ' + state;
+    label.textContent = state === 'online' ? 'Connected' : state === 'offline' ? 'Offline' : 'Connecting…';
+  }
+
+  function showError(msg) {
+    const b = $('error-banner');
+    b.textContent = msg;
+    b.classList.add('visible');
+  }
+
+  function hideError() {
+    $('error-banner').classList.remove('visible');
+  }
+
+  function render(s) {
+    hideError();
+    setConn('online');
+
+    const winderOn = String(s.winderEnabled) === '1' || s.winderEnabled === true;
+    const timerOn  = String(s.timerEnabled)  === '1' || s.timerEnabled  === true;
+
+    $('winder-status').innerHTML = pill(winderOn, '● Running', '○ Stopped');
+    $('winder-sub').textContent = winderOn ? 'Motor is active' : 'Motor is off';
+
+    $('timer-status').innerHTML = pill(timerOn, '● Enabled', '○ Disabled');
+    $('timer-sub').textContent = timerOn ? 'Timer will start winder on schedule' : 'Manual control only';
+
+    $('tpd').textContent = s.rotationsPerDay ?? s.tpd ?? '—';
+
+    const { icon, label, sub } = directionInfo(s.direction);
+    $('dir-icon').textContent = icon;
+    $('direction').textContent = label;
+    $('dir-sub').textContent = sub;
+
+    const h = s.hour ?? s.hours;
+    const m = s.minutes ?? s.mins;
+    $('schedule-time').textContent = (h != null && m != null) ? `${pad(h)}:${pad(m)}` : '—';
+    $('schedule-sub').textContent = timerOn ? 'Timer active' : 'Timer off — time set but inactive';
+
+    $('api-version').textContent = s.apiVersion ?? '—';
+    $('gmt-offset').textContent = formatGmt(s.gmtOffset);
+    $('screen-sleep').textContent = s.screenSleep != null ? (s.screenSleep ? 'On' : 'Off') : '—';
+    $('wind-duration').textContent = s.customWindDuration != null ? `${s.customWindDuration} s` : '—';
+
+    $('last-updated').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+  }
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch(`${BASE}/status`, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      render(data);
+    } catch (err) {
+      setConn('offline');
+      showError(`Cannot reach ${BASE}/status — ${err.message}. Is your device on the same network?`);
+      $('last-updated').textContent = 'Last attempt: ' + new Date().toLocaleTimeString();
+    }
+  }
+
+  // Progress bar animation
+  function animateProgress() {
+    const bar = $('progress');
+    bar.style.transition = 'none';
+    bar.style.transform = 'scaleX(1)';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bar.style.transition = `transform ${INTERVAL}ms linear`;
+        bar.style.transform = 'scaleX(0)';
+      });
+    });
+  }
+
+  function tick() {
+    fetchStatus();
+    animateProgress();
+  }
+
+  tick();
+  setInterval(tick, INTERVAL);
+</script>
+</body>
+</html>
