@@ -319,7 +319,7 @@
 </footer>
 
 <script>
-  const BASE = 'http://winderoo.local';
+  const BASE = '';
   const INTERVAL = 10000;
 
   const $ = id => document.getElementById(id);
@@ -400,13 +400,13 @@
 
   async function fetchStatus() {
     try {
-      const res = await fetch(`${BASE}/status`, { cache: 'no-store' });
+      const res = await fetch(`${BASE}/api/status`, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       render(data);
     } catch (err) {
       setConn('offline');
-      showError(`Cannot reach ${BASE}/status — ${err.message}. Is your device on the same network?`);
+      showError(`Cannot reach Winderoo — ${err.message}. Is the server running on the same network?`);
       $('last-updated').textContent = 'Last attempt: ' + new Date().toLocaleTimeString();
     }
   }
